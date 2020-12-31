@@ -2,6 +2,8 @@
 
 set -e
 
+pytest -q
+
 pushd acpanel
 yarn && yarn build
 popd

@@ -2,6 +2,11 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: AC heater user interface
 Transform: AWS::Serverless-2016-10-31
 
+Parameters:
+  ThingName:
+    Type: String
+    Default: ac-heater
+
 Globals:
   Function:
     Runtime: python3.7
@@ -12,10 +17,20 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: handler.handler
+      Environment:
+        Variables:
+          THING_NAME: !Ref ThingName
       Policies:
-        - !Ref IoTAccessPolicy
+        - Statement:
+            - Effect: Allow
+              Action:
+                - iot:GetThingShadow
+                - iot:UpdateThingShadow
+              Resource: !Sub "arn:aws:iot:us-east-1:${AWS::AccountId}:thing/${ThingName}"
       Events:
         Web:
           Type: HttpApi
 
-  
+Outputs:
+  URL:
+    Value: !Sub "https://${ServerlessHttpApi}.execute-api.us-east-1.amazonaws.com/"
