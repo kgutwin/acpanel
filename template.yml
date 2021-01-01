@@ -7,6 +7,10 @@ Parameters:
     Type: String
     Default: ac-heater
 
+  AccessToken:
+    Type: String
+    Default: mysecret
+
 Globals:
   Function:
     Runtime: python3.7
@@ -20,6 +24,7 @@ Resources:
       Environment:
         Variables:
           THING_NAME: !Ref ThingName
+          ACCESS_TOKEN: !Ref AccessToken
       Policies:
         - Statement:
             - Effect: Allow

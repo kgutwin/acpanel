@@ -94,16 +94,22 @@ class Request:
                 self.data = event['body']
             content_type = event['headers'].get('content-type', '').lower()
             if content_type == 'application/x-www-form-urlencoded':
-                self.data = urllib.parse.parse_qs(data.decode('utf-8'))
+                self.data = urllib.parse.parse_qs(self.data.decode('utf-8'))
                 self.data = {
                     k: v[0] if len(v) == 1 else v
-                    for k, v in data.items()
+                    for k, v in self.data.items()
                 }
+            elif content_type == 'application/json':
+                self.data = json.loads(self.data)
         else:
             self.data = None
 
         self.cookie = Cookie(event.get('cookies', {}))
 
+    @property
+    def raw_body(self):
+        return self.event['body']
+        
     @property
     def method(self):
         return self.event['requestContext']['http']['method']
@@ -113,7 +119,7 @@ class Request:
         return self.event['requestContext']['http']['path']
 
 
-def response(body, status_code=200, headers={}, cookie=None):
+def response(body, status_code=200, headers={}, cookie=None, is_json=False):
     """Create an appropriate response object.
 
     >>> response('foo') # doctest: +NORMALIZE_WHITESPACE
@@ -127,10 +133,19 @@ def response(body, status_code=200, headers={}, cookie=None):
      'headers': {'Content-Type': 'text/html'}, 'isBase64Encoded': True}
 
     """
+    if isinstance(body, dict):
+        body = json.dumps(body)
+        is_json = True
+
     if 'Content-Type' not in headers:
-        headers['Content-Type'] = 'text/html'
+        if is_json:
+            headers['Content-Type'] = 'application/json'
+        else:
+            headers['Content-Type'] = 'text/html'
+
     if cookie is not None:
         headers.update(cookie.headers_out)
+
     b64 = False
     if isinstance(body, bytes):
         b64 = True

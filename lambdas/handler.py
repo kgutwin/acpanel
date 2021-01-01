@@ -24,6 +24,7 @@ server = lhttp.Server()
 
 server.mount('^/api/shadow$', iot_api.get_shadow, method='GET')
 server.mount('^/api/shadow$', iot_api.put_shadow, method='PUT')
+server.mount('^/api/auth$', iot_api.check_auth, method='POST')
 
 static = lhttp.Static('static')
 server.mount('^/$', static.path('index.html'))
