@@ -1,4 +1,5 @@
 import os
+import json
 import boto3
 import logging
 from lhttp import response as http_response
@@ -19,10 +20,16 @@ def put_shadow(request):
         return http_response({'state': 'ERROR', 'msg': 'missing auth cookie'},
                              status_code=400)
 
-    return http_response('')
+    payload = json.dumps(request.data).encode('utf-8')
+    response = iot.update_thing_shadow(thingName=os.environ['THING_NAME'],
+                                       payload=payload)
+    response = iot.get_thing_shadow(thingName=os.environ['THING_NAME'])
+    payload = response['payload'].read()
+
+    return http_response(payload, is_json=True)
 
 
-def check_auth(request):
+def do_auth(request):
     if request.cookie.check():
         request.cookie.add() # regenerate
         return http_response({'state': 'OK'}, cookie=request.cookie)
@@ -37,3 +44,11 @@ def check_auth(request):
 
     return http_response({'state': 'ERROR', 'msg': 'access_token incorrect'},
                          status_code=400)
+
+
+def check_auth(request):
+    if request.cookie.check():
+        return http_response({'state': 'OK'}, cookie=request.cookie)
+
+    return http_response({'state': 'ERROR', 
+                          'msg': 'missing or invalid cookie'})

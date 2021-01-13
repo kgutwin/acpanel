@@ -29,6 +29,38 @@ class API {
 		})
 	    .catch((error) => { console.error('Error:', error); });
     }
+
+    update(desired) {
+	const opts = {
+	    method: 'PUT',
+	    headers: {'Content-Type': 'application/json'},
+	    body: JSON.stringify({state: {desired}})
+	};
+	return fetch('/api/shadow', opts)
+	    .then(response => response.json())
+	    .then(data => {
+		    this.changeNotifications.forEach(func => {func(data)});
+		})
+	    .catch((error) => { console.error('Update error:', error); });
+    }
+
+    isAuth() {
+	return fetch('/api/auth').then(response => response.json())
+	    .catch((error) => { console.error('Auth check error:', error); });
+    }
+
+    signin(accessKey) {
+	const opts = {
+	    method: 'POST',
+	    headers: {
+		'Content-Type': 'application/json'
+	    },
+	    body: JSON.stringify({ access_token: accessKey })
+	};
+	return fetch('/api/auth', opts)
+	    .then(response => response.json())
+	    .catch((error) => { console.error('Signin error:', error); });
+    }
 };
 
 const apiSingleton = new API();
